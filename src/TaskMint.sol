@@ -1,9 +1,9 @@
 // Address of the contract: 0x21750a59CFD663B78b065DA9e6C76BA44c2bc525
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.19;
 
-contract AccountabilityContract {
+contract TaskMint {
     struct Task {
         string description;
         bool isCompleted;
