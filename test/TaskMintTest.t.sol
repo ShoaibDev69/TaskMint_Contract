@@ -39,8 +39,10 @@ contract TaskMintTest is Test {
         taskMint.createTask("Task 2");
         taskMint.depositFunds{value: 0.001 ether}();
         taskMint.completeTask(0);
-        assertEq(taskMint.getTasks()[0].isCompleted, true);
-        assertEq(taskMint.getTasks()[1].isCompleted, false);
+        (, bool isCompleted) = taskMint.getTasks(0);
+        assertEq(isCompleted, true);
+        (, bool isCompleted2) = taskMint.getTasks(1);
+        assertEq(isCompleted, false);
         taskMint.completeTask(1);
         assertEq(taskMint.getTaskCount(), 0);
         assertEq(taskMint.getDepositAmount(), 0);
