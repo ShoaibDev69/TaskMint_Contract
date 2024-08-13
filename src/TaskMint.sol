@@ -1,6 +1,5 @@
-// Address of the contract: 0x21750a59CFD663B78b065DA9e6C76BA44c2bc525
 /*
-// SPDX-License-Identifier: MIT
+// Address of the contract: 0x21750a59CFD663B78b065DA9e6C76BA44c2bc525
 pragma solidity ^0.8.19;
 
 contract TaskMint {
@@ -75,8 +74,7 @@ contract TaskMint {
 }
 */
 
-// Refactored Version
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
 contract TaskMint {
@@ -86,57 +84,40 @@ contract TaskMint {
     }
 
     Task[] public tasks;
-    address public immutable owner;
+    address public owner;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
     }
 
+    event TaskCreated(string description);
+    event TaskCompleted(uint256 taskId);
+    event FundsDeposited(uint256 amount);
+    event FundsWithdrawn(uint256 amount);
+
     constructor() {
         owner = msg.sender;
     }
 
-    function createTask(string memory _description) external onlyOwner {
-        tasks.push(Task({description: _description, isCompleted: false}));
+    function createTask(string memory _description) public onlyOwner {
+        tasks.push(Task(_description, false));
+        emit TaskCreated(_description);
     }
 
-    function depositFunds() external payable onlyOwner {
+    function depositFunds() public payable onlyOwner {
         require(msg.value > 0, "You need to send some ether");
+        emit FundsDeposited(msg.value);
     }
 
-    function withdrawDepositSafely() external onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "There are no funds to withdraw");
-        payable(owner).transfer(balance);
+    function withdrawDepositSafely() public onlyOwner {
+        uint256 amount = address(this).balance;
+        require(amount > 0, "There are no funds to withdraw");
+        payable(owner).transfer(amount);
+        emit FundsWithdrawn(amount);
     }
 
-    function completeTask(uint256 _taskId) external onlyOwner {
-        require(_taskId < tasks.length, "Task does not exist");
-        require(!tasks[_taskId].isCompleted, "Task is already completed");
-
-        tasks[_taskId].isCompleted = true;
-
-        if (_allTasksCompleted()) {
-            _withdrawAndClear();
-        }
-    }
-
-    function getTaskCount() external view returns (uint256) {
-        return tasks.length;
-    }
-
-    function getDepositAmount() external view returns (uint256) {
-        return address(this).balance;
-    }
-
-    function getTasks() external view returns (Task[] memory) {
-        return tasks;
-    }
-
-    // Private Functions
-
-    function _allTasksCompleted() private view returns (bool) {
+    function allTasksCompleted() private view returns (bool) {
         for (uint256 i = 0; i < tasks.length; i++) {
             if (!tasks[i].isCompleted) {
                 return false;
@@ -145,11 +126,36 @@ contract TaskMint {
         return true;
     }
 
-    function _withdrawAndClear() private {
-        uint256 balance = address(this).balance;
-        if (balance > 0) {
-            payable(owner).transfer(balance);
+    function clearTask() private {
+        tasks = new Task[](0);
+    }
+
+    event TaskCompleted(uint256 taskId, string description);
+
+    function completeTask(uint256 _taskId) public onlyOwner {
+        require(_taskId < tasks.length, "Task does not exist");
+        require(!tasks[_taskId].isCompleted, "Task is already completed");
+
+        tasks[_taskId].isCompleted = true;
+        emit TaskCompleted(_taskId, tasks[_taskId].description);
+
+        if (allTasksCompleted()) {
+            uint256 amount = address(this).balance;
+            payable(owner).transfer(amount);
+            clearTask();
         }
-        delete tasks;
+    }
+
+    function getTaskCount() public view returns (uint256) {
+        return tasks.length;
+    }
+
+    function getDepositAmount() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getTasks(uint256 _index) public view returns (string memory, bool) {
+        require(_index < tasks.length, "Task does not exist");
+        return (tasks[_index].description, tasks[_index].isCompleted);
     }
 }
