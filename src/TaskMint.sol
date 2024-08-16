@@ -83,7 +83,7 @@ contract TaskMint {
         bool isCompleted;
     }
 
-    Task[] public tasks;
+    Task[] private tasks; // tasks array ko private banaein
     address public owner;
 
     modifier onlyOwner() {
