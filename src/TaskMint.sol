@@ -91,30 +91,22 @@ contract TaskMint {
         _;
     }
 
-    event TaskCreated(string description);
-    event TaskCompleted(uint256 taskId);
-    event FundsDeposited(uint256 amount);
-    event FundsWithdrawn(uint256 amount);
-
     constructor() {
         owner = msg.sender;
     }
 
     function createTask(string memory _description) public onlyOwner {
         tasks.push(Task(_description, false));
-        emit TaskCreated(_description);
     }
 
     function depositFunds() public payable onlyOwner {
         require(msg.value > 0, "You need to send some ether");
-        emit FundsDeposited(msg.value);
     }
 
     function withdrawDepositSafely() public onlyOwner {
         uint256 amount = address(this).balance;
         require(amount > 0, "There are no funds to withdraw");
         payable(owner).transfer(amount);
-        emit FundsWithdrawn(amount);
     }
 
     function allTasksCompleted() private view returns (bool) {
@@ -130,14 +122,11 @@ contract TaskMint {
         tasks = new Task[](0);
     }
 
-    event TaskCompleted(uint256 taskId, string description);
-
     function completeTask(uint256 _taskId) public onlyOwner {
         require(_taskId < tasks.length, "Task does not exist");
         require(!tasks[_taskId].isCompleted, "Task is already completed");
 
         tasks[_taskId].isCompleted = true;
-        emit TaskCompleted(_taskId, tasks[_taskId].description);
 
         if (allTasksCompleted()) {
             uint256 amount = address(this).balance;
@@ -154,7 +143,7 @@ contract TaskMint {
         return address(this).balance;
     }
 
-    function getTasks(uint256 _index) public view returns (string memory, bool) {
+    function getTask(uint256 _index) public view returns (string memory, bool) {
         require(_index < tasks.length, "Task does not exist");
         return (tasks[_index].description, tasks[_index].isCompleted);
     }
